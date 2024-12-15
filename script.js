@@ -323,14 +323,14 @@ class MainPlayer extends Player {
                 }
             } else {
                 if (key == "KeyD") {
-                    this.controls_x = 1
                     this.send_packet("C","W","2")
+                    this.controls_x = 1
                 } else if (key == "KeyA") {
-                    this.controls_x = -1
                     this.send_packet("C","W","1")
+                    this.controls_x = -1
                 } else if (key == "Space") {
-                    this.controls_jump = true
                     this.send_packet("C","J","1")
+                    this.controls_jump = true
                     e.preventDefault()
                     return false
                 } else if (key == "KeyR") {
@@ -367,11 +367,11 @@ class MainPlayer extends Player {
 
             if ((key == "KeyD" && this.controls_x == 1)
                     || (key == "KeyA" && this.controls_x == -1)) {
-                this.controls_x = 0
                 this.send_packet("C","W","0")
+                this.controls_x = 0
             } else if (key == "Space" && this.controls_jump) {
-                this.controls_jump = false
                 this.send_packet("C","J","0")
+                this.controls_jump = false
             }
 
             if (allowed_key_to_send.includes(key)) {
@@ -571,7 +571,6 @@ class MainPlayer extends Player {
             ctx.fillText("camera.x: "+camera.x, 0, 100);
             ctx.fillText("camera.y: "+camera.y, 0, 120);
         }
-
 
         if (!chatOpened) {
             ctx.fillStyle = "#22222288"

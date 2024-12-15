@@ -1,5 +1,5 @@
-from websockets.asyncio.server import serve, ServerConnection
-import threading, random, sys, asyncio
+from websockets.server import serve, ServerConnection
+import random, sys, asyncio
 
 class Block:
     def __init__(self, x, y, block_type, color, collides):

@@ -272,9 +272,16 @@ async def handler(websocket: ServerConnection):
                 print(message)
 
             if packet_id == "R":
-                rid, x, y = packet_data
+                rid = packet_data[0]
 
-                writePacket(websocket, "R", [rid, str(current_milli_time()), str(player.vel_x + (x - player.x)), str(player.vel_y + (y - player.y))])
+                await writePacket(websocket, "R", [
+                    rid,
+                    str(current_milli_time()),
+                    str(player.vel_x),
+                    str(player.vel_y),
+                    str(player.x),
+                    str(player.y)
+                ])
 
             if packet_id == "D":
                 x,y = packet_data

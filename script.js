@@ -409,10 +409,6 @@ class MainPlayer extends Player {
                 this.send_packet("D",x,y)
             }
         })
-
-        setInterval(() => {
-            this.send_packet("R",Date.now(),this.x,this.y)
-        }, 100)
     }
 
     recv_packet(packet) {
@@ -445,6 +441,8 @@ class MainPlayer extends Player {
             else player.ping = (player.ping + ping) / 2
             player.velocity_x = parseFloat(packet_data[2])
             player.velocity_y = parseFloat(packet_data[3])
+            player.x = parseFloat(packet_data[4])
+            player.y = parseFloat(packet_data[5])
         }
 
         if (packet_id == "P") {
@@ -557,6 +555,8 @@ class MainPlayer extends Player {
         this.collide()
 
         ticksAlive++
+
+        this.send_packet("R",Date.now())
     }
 
     render() {

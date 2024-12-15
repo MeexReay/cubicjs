@@ -1,5 +1,5 @@
 from websockets.server import serve, ServerConnection
-import random, sys, asyncio
+import random, sys, asyncio, time
 
 class Block:
     def __init__(self, x, y, block_type, color, collides):
@@ -169,8 +169,12 @@ class Player(Block):
         # pass
 
     async def render(self):
-        await self.setVel(self.vel_x * 0.5, self.vel_y * 0.5)
-        await self.setPos(self.x + self.vel_x, self.y + self.vel_y)
+        self.vel_x *= 0.5
+        self.vel_y *= 0.5
+        self.x += self.vel_x
+        self.y += self.vel_y
+        # await self.setVel(self.vel_x * 0.5, self.vel_y * 0.5)
+        # await self.setPos(self.x + self.vel_x, self.y + self.vel_y)
         return self.vel_x != 0 or self.vel_y != 0
 
     def toStatement(self, add=True):
@@ -188,6 +192,9 @@ def getPlayer(name):
         if type(b) == Player:
             if b.name == name:
                 return b
+
+def current_milli_time():
+    return round(time.time() * 1000)
 
 async def readPacket(websocket: ServerConnection) -> tuple[str, list[str]]:
     data = await websocket.recv()
@@ -263,6 +270,11 @@ async def handler(websocket: ServerConnection):
                     await p.sendMessage(message)
 
                 print(message)
+
+            if packet_id == "R":
+                rid, x, y = packet_data
+
+                writePacket(websocket, "R", [rid, str(current_milli_time()), str(player.vel_x + (x - player.x)), str(player.vel_y + (y - player.y))])
 
             if packet_id == "D":
                 x,y = packet_data

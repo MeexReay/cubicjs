@@ -279,6 +279,8 @@ class MainPlayer extends Player {
             "normal", "normal", "normal", "normal", "normal",
             "normal", "normal", "normal", "normal", "normal"
         ]
+
+        this.ping = -1
     }
 
     on_connect(name) {
@@ -324,13 +326,13 @@ class MainPlayer extends Player {
             } else {
                 if (key == "KeyD") {
                     this.send_packet("C","W","2")
-                    this.controls_x = 1
+                    setTimeout(() => { this.controls_x = 1 }, this.ping)
                 } else if (key == "KeyA") {
                     this.send_packet("C","W","1")
-                    this.controls_x = -1
+                    setTimeout(() => { this.controls_x = -1 }, this.ping)
                 } else if (key == "Space") {
                     this.send_packet("C","J","1")
-                    this.controls_jump = true
+                    setTimeout(() => { this.controls_jump = true }, this.ping)
                     e.preventDefault()
                     return false
                 } else if (key == "KeyR") {
@@ -368,10 +370,10 @@ class MainPlayer extends Player {
             if ((key == "KeyD" && this.controls_x == 1)
                     || (key == "KeyA" && this.controls_x == -1)) {
                 this.send_packet("C","W","0")
-                this.controls_x = 0
+                setTimeout(() => { this.controls_x = 0 }, this.ping)
             } else if (key == "Space" && this.controls_jump) {
                 this.send_packet("C","J","0")
-                this.controls_jump = false
+                setTimeout(() => { this.controls_jump = false }, this.ping)
             }
 
             if (allowed_key_to_send.includes(key)) {
@@ -407,13 +409,17 @@ class MainPlayer extends Player {
                 this.send_packet("D",x,y)
             }
         })
+
+        setInterval(() => {
+            this.send_packet("R",Date.now(),this.x,this.y)
+        }, 100)
     }
 
     recv_packet(packet) {
         let packet_id = packet[0]
         let packet_data = packet.slice(1).split("\n")
 
-        console.log(packet_id, packet_data)
+        // console.log(packet_id, packet_data)
 
         if (packet_id == "K") {
             server_error.innerText = packet_data[0]
@@ -431,6 +437,14 @@ class MainPlayer extends Player {
 
         if (packet_id == "M") {
             chatMessages.unshift(...packet_data)
+        }
+
+        if (packet_id == "R") {
+            let ping = parseFloat(packet_data[1]) - parseFloat(packet_data[0])
+            if (player.ping == -1) player.ping = ping
+            else player.ping = (player.ping + ping) / 2
+            player.velocity_x = parseFloat(packet_data[2])
+            player.velocity_y = parseFloat(packet_data[3])
         }
 
         if (packet_id == "P") {

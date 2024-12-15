@@ -320,7 +320,7 @@ async def handler(websocket: ServerConnection):
 
         await writePacket(websocket, "K", [str(exc)])
 
-    print(name, "leaved the server")
+    print(name, "left the server")
 
 async def tickTimer():
     while True:

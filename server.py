@@ -121,12 +121,7 @@ class Player(Block):
         self.vel_x = round(self.vel_x * 100) / 100
         self.vel_y = round(self.vel_y * 100) / 100
 
-        self.vel_x += self.controls_x * self.walk_speed
-
-        if self.controls_jump and self.on_ground:
-            self.vel_y += self.jump_speed
-            self.on_ground = False
-        else:
+        if not self.on_ground:
             self.vel_y -= self.gravity_speed
 
         await self.collide()
@@ -169,12 +164,12 @@ class Player(Block):
         # pass
 
     async def render(self):
-        self.vel_x *= 0.5
-        self.vel_y *= 0.5
-        self.x += self.vel_x
-        self.y += self.vel_y
-        # await self.setVel(self.vel_x * 0.5, self.vel_y * 0.5)
-        # await self.setPos(self.x + self.vel_x, self.y + self.vel_y)
+        # self.vel_x *= 0.5
+        # self.vel_y *= 0.5
+        # self.x += self.vel_x
+        # self.y += self.vel_y
+        await self.setVel(self.vel_x * 0.5, self.vel_y * 0.5)
+        await self.setPos(self.x + self.vel_x, self.y + self.vel_y)
         return self.vel_x != 0 or self.vel_y != 0
 
     def toStatement(self, add=True):
@@ -236,19 +231,16 @@ async def handler(websocket: ServerConnection):
         while True:
             packet_id, packet_data = await readPacket(websocket)
 
-            if packet_id == "C":
-                if packet_data[0] == "W":
-                    if packet_data[1] == "0":
-                        player.controls_x = 0
-                    if packet_data[1] == "1":
-                        player.controls_x = -1
-                    if packet_data[1] == "2":
-                        player.controls_x = 1
-                if packet_data[0] == "J":
-                    if packet_data[1] == "0":
-                        player.controls_jump = False
-                    if packet_data[1] == "1":
-                        player.controls_jump = True
+            if packet_id == "V":
+                vel_x, vel_y = float(packet_data[0]), float(packet_data[1])
+                vel_x = max(min(vel_x, player.walk_speed), -player.walk_speed)
+                vel_y = max(min(vel_x, player.jump_speed), 0)
+
+                player.vel_x += vel_x
+
+                if player.on_ground:
+                    player.vel_y += vel_y
+                    player.on_ground = False
 
             if packet_id == "K":
                 key,pressed = packet_data
@@ -270,18 +262,6 @@ async def handler(websocket: ServerConnection):
                     await p.sendMessage(message)
 
                 print(message)
-
-            if packet_id == "R":
-                rid = packet_data[0]
-
-                await writePacket(websocket, "R", [
-                    rid,
-                    str(current_milli_time()),
-                    str(player.vel_x),
-                    str(player.vel_y),
-                    str(player.x),
-                    str(player.y)
-                ])
 
             if packet_id == "D":
                 x,y = packet_data

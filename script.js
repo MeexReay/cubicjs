@@ -325,14 +325,11 @@ class MainPlayer extends Player {
                 }
             } else {
                 if (key == "KeyD") {
-                    this.send_packet("C","W","2")
-                    setTimeout(() => { this.controls_x = 1 }, this.ping)
+                    this.controls_x = 1
                 } else if (key == "KeyA") {
-                    this.send_packet("C","W","1")
-                    setTimeout(() => { this.controls_x = -1 }, this.ping)
+                    this.controls_x = -1
                 } else if (key == "Space") {
-                    this.send_packet("C","J","1")
-                    setTimeout(() => { this.controls_jump = true }, this.ping)
+                    this.controls_jump = true
                     e.preventDefault()
                     return false
                 } else if (key == "KeyR") {
@@ -369,11 +366,9 @@ class MainPlayer extends Player {
 
             if ((key == "KeyD" && this.controls_x == 1)
                     || (key == "KeyA" && this.controls_x == -1)) {
-                this.send_packet("C","W","0")
-                setTimeout(() => { this.controls_x = 0 }, this.ping)
+                this.controls_x = 0
             } else if (key == "Space" && this.controls_jump) {
-                this.send_packet("C","J","0")
-                setTimeout(() => { this.controls_jump = false }, this.ping)
+                this.controls_jump = false
             }
 
             if (allowed_key_to_send.includes(key)) {
@@ -433,16 +428,6 @@ class MainPlayer extends Player {
 
         if (packet_id == "M") {
             chatMessages.unshift(...packet_data)
-        }
-
-        if (packet_id == "R") {
-            let ping = parseFloat(packet_data[1]) - parseFloat(packet_data[0])
-            if (player.ping == -1) player.ping = ping
-            else player.ping = (player.ping + ping) / 2
-            player.velocity_x = parseFloat(packet_data[2])
-            player.velocity_y = parseFloat(packet_data[3])
-            player.x = parseFloat(packet_data[4])
-            player.y = parseFloat(packet_data[5])
         }
 
         if (packet_id == "P") {
@@ -540,13 +525,22 @@ class MainPlayer extends Player {
         this.socket.send(id+params.join("\n"))
     }
 
+    send_velocity_packet(x, y) {
+        if (x != 0 || y != 0) return
+        this.send_packet("V", x, y)
+    }
+
     tick() {
         super.tick(false)
 
-        this.velocity_x += this.controls_x * this.walk_speed
+        let vel_x = this.controls_x * this.walk_speed
+        let vel_y = 0
+
+        this.velocity_x += vel_x
 
         if (this.controls_jump && this.on_ground) {
-            this.velocity_y += this.jump_speed
+            vel_y = this.jump_speed
+            this.velocity_y += vel_y
             this.on_ground = false
         } else {
             this.velocity_y -= this.gravity_speed
@@ -556,7 +550,7 @@ class MainPlayer extends Player {
 
         ticksAlive++
 
-        this.send_packet("R",Date.now())
+        this.send_velocity_packet(vel_x, vel_y)
     }
 
     render() {

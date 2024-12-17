@@ -409,6 +409,7 @@ class MainPlayer extends Player {
     recv_packet(packet) {
         let packet_id = packet[0]
         let packet_data = packet.slice(1).split("\n")
+        console.log(packet_id, packet_data)
 
         // console.log(packet_id, packet_data)
 
@@ -430,18 +431,23 @@ class MainPlayer extends Player {
             chatMessages.unshift(...packet_data)
         }
 
+        if (packet_id == "R") {
+            this.velocity_x = parseFloat(packet_data[0]) - this.x + parseFloat(packet_data[2])
+            this.velocity_y = parseFloat(packet_data[1]) - this.y + parseFloat(packet_data[3])
+        }
+
         if (packet_id == "P") {
             let x = parseFloat(packet_data[0])
             let y = parseFloat(packet_data[1])
-            if (Math.abs(x - this.x) > 0.5) this.x = x
-            if (Math.abs(y - this.y) > 0.5) this.y = y
+            this.x = x
+            this.y = y
         }
 
         if (packet_id == "V") {
             let x = parseFloat(packet_data[0])
             let y = parseFloat(packet_data[1])
-            if (Math.abs(x - this.velocity_x) > 0.5) this.velocity_x = x
-            if (Math.abs(y - this.velocity_y) > 0.5) this.velocity_y = y
+            this.velocity_x = x
+            this.velocity_y = y
         }
 
         if (packet_id == "S") {
@@ -523,7 +529,6 @@ class MainPlayer extends Player {
             return
         }
         this.socket.send(id+params.join("\n"))
-        console.log(id, params)
     }
 
     send_velocity_packet(x, y) {

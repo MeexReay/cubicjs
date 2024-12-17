@@ -90,7 +90,7 @@ class Player(Block):
         self.vel_x = x
         self.vel_y = y
 
-        await writePacket(self.websocket, "V", [str(x), str(y)])
+        await self.sendVel(x, y)
 
     async def setPos(self, x, y):
         if x == self.x and y == self.y: return
@@ -98,6 +98,12 @@ class Player(Block):
         self.x = x
         self.y = y
 
+        await self.sendPos(x, y)
+
+    async def sendVel(self, x, y):
+        await writePacket(self.websocket, "V", [str(x), str(y)])
+
+    async def sendPos(self, x, y):
         await writePacket(self.websocket, "P", [str(x), str(y)])
 
     async def sendMessage(self, message):
@@ -172,6 +178,9 @@ class Player(Block):
         # await self.setPos(self.x + self.vel_x, self.y + self.vel_y)
         return self.vel_x != 0 or self.vel_y != 0
 
+    async def keepAlive(self):
+        await writePacket(self.websocket, "R", [str(self.x), str(self.y), str(self.vel_x), str(self.vel_y)])
+
     def toStatement(self, add=True):
         return f"P1{self.name},{self.x},{self.y},{self.vel_x},{self.vel_y},{self.color}" if add else f"P0{self.name}"
 
@@ -236,13 +245,15 @@ async def handler(websocket: ServerConnection):
             if packet_id == "V":
                 vel_x, vel_y = float(packet_data[0]), float(packet_data[1])
                 vel_x = max(min(vel_x, player.walk_speed), -player.walk_speed)
-                vel_y = max(min(vel_x, player.jump_speed), 0)
+                vel_y = max(min(vel_y, player.jump_speed), 0)
 
                 player.vel_x += vel_x
 
                 if player.on_ground:
                     player.vel_y += vel_y
                     player.on_ground = False
+
+                await player.sendToPlayers()
 
             if packet_id == "K":
                 key,pressed = packet_data
@@ -329,6 +340,12 @@ async def tickTimer():
             await b.tick()
         await asyncio.sleep(1/20)
 
+async def keepAliveTimer():
+    while True:
+        for b in getPlayers():
+            await b.keepAlive()
+        await asyncio.sleep(1)
+
 async def renderTimer():
     while True:
         for p in getPlayers():
@@ -337,6 +354,7 @@ async def renderTimer():
 
 async def main():
     asyncio.get_event_loop().create_task(tickTimer())
+    asyncio.get_event_loop().create_task(keepAliveTimer())
     asyncio.get_event_loop().create_task(renderTimer())
     async with serve(handler, HOST, PORT) as server:
         print(f"started server on {HOST}:{PORT}")

@@ -433,15 +433,15 @@ class MainPlayer extends Player {
         if (packet_id == "P") {
             let x = parseFloat(packet_data[0])
             let y = parseFloat(packet_data[1])
-            if (Math.abs(x - this.x) > 2) this.x = x
-            if (Math.abs(y - this.y) > 2) this.y = y
+            if (Math.abs(x - this.x) > 0.5) this.x = x
+            if (Math.abs(y - this.y) > 0.5) this.y = y
         }
 
         if (packet_id == "V") {
             let x = parseFloat(packet_data[0])
             let y = parseFloat(packet_data[1])
-            if (Math.abs(x - this.velocity_x) > 2) this.velocity_x = x
-            if (Math.abs(y - this.velocity_y) > 2) this.velocity_y = y
+            if (Math.abs(x - this.velocity_x) > 0.5) this.velocity_x = x
+            if (Math.abs(y - this.velocity_y) > 0.5) this.velocity_y = y
         }
 
         if (packet_id == "S") {
@@ -523,24 +523,24 @@ class MainPlayer extends Player {
             return
         }
         this.socket.send(id+params.join("\n"))
+        console.log(id, params)
     }
 
     send_velocity_packet(x, y) {
-        if (x != 0 || y != 0) return
+        if (x == 0 && y == 0) return
         this.send_packet("V", x, y)
     }
 
     tick() {
         super.tick(false)
 
-        let vel_x = this.controls_x * this.walk_speed
-        let vel_y = 0
+        let vel_x = this.velocity_x
+        let vel_y = this.velocity_y
 
-        this.velocity_x += vel_x
+        this.velocity_x += this.controls_x * this.walk_speed
 
         if (this.controls_jump && this.on_ground) {
-            vel_y = this.jump_speed
-            this.velocity_y += vel_y
+            this.velocity_y += this.jump_speed
             this.on_ground = false
         } else {
             this.velocity_y -= this.gravity_speed
@@ -550,7 +550,7 @@ class MainPlayer extends Player {
 
         ticksAlive++
 
-        this.send_velocity_packet(vel_x, vel_y)
+        this.send_velocity_packet(this.velocity_x-vel_x, this.velocity_y-vel_y)
     }
 
     render() {

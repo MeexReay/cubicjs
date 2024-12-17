@@ -164,12 +164,12 @@ class Player(Block):
         # pass
 
     async def render(self):
-        # self.vel_x *= 0.5
-        # self.vel_y *= 0.5
-        # self.x += self.vel_x
-        # self.y += self.vel_y
-        await self.setVel(self.vel_x * 0.5, self.vel_y * 0.5)
-        await self.setPos(self.x + self.vel_x, self.y + self.vel_y)
+        self.vel_x *= 0.5
+        self.vel_y *= 0.5
+        self.x += self.vel_x
+        self.y += self.vel_y
+        # await self.setVel(self.vel_x * 0.5, self.vel_y * 0.5)
+        # await self.setPos(self.x + self.vel_x, self.y + self.vel_y)
         return self.vel_x != 0 or self.vel_y != 0
 
     def toStatement(self, add=True):
@@ -193,7 +193,9 @@ def current_milli_time():
 
 async def readPacket(websocket: ServerConnection) -> tuple[str, list[str]]:
     data = await websocket.recv()
-    return data[0], data[1:].splitlines()
+    id,data = data[0], data[1:].splitlines()
+    print(id, data)
+    return id,data
 
 async def writePacket(websocket: ServerConnection, packet_id: str, packet_data: list[str]):
     await websocket.send(packet_id + ("\n".join(packet_data)))

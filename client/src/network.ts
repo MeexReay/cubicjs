@@ -1,30 +1,76 @@
-interface Packet {
-    getId(): string
-    getData(): string
+class Packet {
+    private id: string
+    private data: string[]
+
+    constructor(id: string, data: string[]) {
+        this.id = id
+        this.data = data
+    }
+
+    getId(): string { return this.id }
+    getData(): string[] { return this.data }
+
+    static fromString(data: string): Packet {
+        return new Packet(data[0], data.slice(1).split("\n"))
+    }
 }
 
-function createPacket(id: string, ...params: string[]): Packet {
-    return {
-        getId: () => id,
-        getData: () => params.join("\n"),
-    } 
+class JoinPacket extends Packet {
+    constructor(name: string) {
+        super("J", [name])
+    }
 }
 
-function fromPacket(data: string): Packet {
-    return createPacket(data[0], ...data.slice(1).split("\n"))
+class MessagePacket extends Packet {
+    constructor(message: string) {
+        super("M", [message])
+    }
+}
+
+class KeyPacket extends Packet {
+    constructor(key: string, pressed: boolean) {
+        super("K", [key, pressed ? "1" : "0"])
+    }
+}
+
+class PlaceBlockPacket extends Packet {
+    constructor(x: number, y: number, type: string) {
+        super("P", [x.toString(), y.toString(), type])
+    }
+}
+
+class DestroyBlockPacket extends Packet {
+    constructor(x: number, y: number) {
+        super("D", [x.toString(), y.toString()])
+    }
+}
+
+class PositionPacket extends Packet {
+    constructor(x: number, y: number) {
+        super("X", [x.toString(), y.toString()])
+    }
+}
+
+class VelocityPacket extends Packet {
+    constructor(x: number, y: number) {
+        super("V", [x.toString(), y.toString()])
+    }
 }
 
 class Connection {
     private socket: WebSocket
-    private on_packet: (packet: Packet) => {}
-    private on_close: (error: string | null) => {}
+    private on_packet: (packet: Packet) => void
+    private on_close: (error: string | null) => void
 
     constructor(
-        socket: WebSocket, 
-        on_packet: (packet: Packet) => {}, 
-        on_close: (error: string | null) => {}
+        address: string, 
+        on_packet: (packet: Packet) => void, 
+        on_close: (error: string | null) => void
     ) {
-        this.socket = socket
+        this.socket = new WebSocket(
+            "ws://"+address,
+            "cubic",
+        )
         this.on_packet = on_packet
         this.on_close = on_close
 
@@ -34,7 +80,7 @@ class Connection {
     }
 
     private _on_message(event: MessageEvent) {
-        this.on_packet(fromPacket(event.data))
+        this.on_packet(Packet.fromString(event.data))
     }
 
     private _on_close(event: CloseEvent) {

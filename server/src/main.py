@@ -43,7 +43,7 @@ async def main():
     asyncio.get_event_loop().create_task(tickTimer())
     asyncio.get_event_loop().create_task(keepAliveTimer())
     asyncio.get_event_loop().create_task(renderTimer())
-    await startServer(HOST, PORT, getPlayer, getPlayers, WORLD)
+    await startServer(HOST, PORT)
 
 WORLD = [
     Block(-1, -1, "normal", "#555", True),

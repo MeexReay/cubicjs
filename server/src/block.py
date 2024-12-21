@@ -18,18 +18,17 @@ class Block:
         if x != 0: player.vel_x = self.x + x - player.x
         if y != 0: player.vel_y = self.y + y - player.y
 
-        if x != 0 or y != 0: # special blocks
-            if self.type == "jump_boost":
-                player.setGravitySpeed(1.25)
-                player.setJumpSpeed(5)
-                player.on_ground = True
-            elif player.jump_speed != 2:
-                player.setGravitySpeed(0.5)
-                player.setJumpSpeed(2)
+        if self.type == "jump_boost":
+            await player.setGravitySpeed(1.25)
+            await player.setJumpSpeed(5)
+            player.on_ground = True
+        elif player.jump_speed != 2:
+            await player.setGravitySpeed(0.5)
+            await player.setJumpSpeed(2)
 
-            if self.type == "killer":
-                await player.setPos(*SPAWN)
-                await player.sendToPlayers()
+        if self.type == "killer":
+            await player.setPos(*SPAWN)
+            await player.sendToPlayers()
 
     def toStatement(self, add=True):
         return f"B1{self.x},{self.y},{int(self.collides)},{self.type},{self.color}" if add else f"B0{self.x},{self.y}"

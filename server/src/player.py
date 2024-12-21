@@ -1,12 +1,13 @@
 from block import Block
 from packet import writePacket
 from config import SPAWN, REACH_DISTANCE, BLOCK_TYPES
-from world import *
+import world
 import time
 
 class Player(Block):
-    def __init__(self, websocket, x=None, y=None, name=None, color=None, vel_x=None, vel_y=None):
+    def __init__(self, websocket, x=0, y=0, name=None, color=None, vel_x=None, vel_y=None):
         super().__init__(x, y, None, color, True)
+
         self.x = x
         self.y = y
 
@@ -27,7 +28,7 @@ class Player(Block):
         self.lsd_time = time.time()
 
     async def sendPacket(self, packet_id, packet_data):
-        await writePacket(self.websocket, packet_id, packet_data)
+        await self.sendPacket(packet_id, packet_data)
 
     async def onPacket(self, packet_id, packet_data):
         if packet_id == "V":
@@ -77,7 +78,7 @@ class Player(Block):
             message = packet_data[0]
             message = f"{self.name} > {message}"
 
-            for p in getPlayers():
+            for p in world.getPlayers():
                 await p.sendMessage(message)
 
             print(message)
@@ -87,7 +88,7 @@ class Player(Block):
             x,y = int(x),int(y)
 
             block = None
-            for i in WORLD:
+            for i in world.WORLD:
                 if type(i) == Player:
                     continue
                 if i.x == x and i.y == y:
@@ -100,9 +101,9 @@ class Player(Block):
             if abs(x - self.x) ** 2 + abs(y - self.y) ** 2 > REACH_DISTANCE ** 2:
                 return
 
-            WORLD.remove(block)
+            world.WORLD.remove(block)
 
-            for p in getPlayers():
+            for p in world.getPlayers():
                 await p.sendWorld([block.toStatement(False)])
 
         if packet_id == "P":
@@ -116,7 +117,7 @@ class Player(Block):
                 return
 
             found_block = False
-            for i in WORLD:
+            for i in world.WORLD:
                 if type(i) == Player:
                     continue
                 if i.x == x and i.y == y:
@@ -126,25 +127,25 @@ class Player(Block):
 
             block = Block(x,y,block_type,BLOCK_TYPES[block_type],True)
 
-            WORLD.append(block)
+            world.WORLD.append(block)
 
-            for p in getPlayers():
+            for p in world.getPlayers():
                 await p.sendWorld([block.toStatement()])
 
     async def setWalkSpeed(self, speed):
-        await writePacket(self.websocket, "S", ["W", str(speed)])
+        await self.sendPacket("S", ["W", str(speed)])
         self.walk_speed = speed
 
     async def setGravitySpeed(self, speed):
-        await writePacket(self.websocket, "S", ["G", str(speed)])
+        await self.sendPacket("S", ["G", str(speed)])
         self.gravity_speed = speed
 
     async def setJumpSpeed(self, speed):
-        await writePacket(self.websocket, "S", ["J", str(speed)])
+        await self.sendPacket("S", ["J", str(speed)])
         self.jump_speed = speed
 
     async def sendName(self, name):
-        await writePacket(self.websocket, "N", [name])
+        await self.sendPacket("N", [name])
 
     async def setName(self, name):
         self.name = name
@@ -152,7 +153,7 @@ class Player(Block):
 
     async def setColor(self, color):
         self.color = color
-        await writePacket(self.websocket, "C", [color])
+        await self.sendPacket("C", [color])
 
     async def setVel(self, x, y):
         if x == self.vel_x and y == self.vel_y: return
@@ -171,23 +172,23 @@ class Player(Block):
         await self.sendPos(x, y)
 
     async def sendVel(self, x, y):
-        await writePacket(self.websocket, "V", [str(x), str(y)])
+        await self.sendPacket("V", [str(x), str(y)])
 
     async def sendPos(self, x, y):
-        await writePacket(self.websocket, "P", [str(x), str(y)])
+        await self.sendPacket("P", [str(x), str(y)])
 
     async def sendMessage(self, message):
-        await writePacket(self.websocket, "M", message.split("\n"))
+        await self.sendPacket("M", message.split("\n"))
 
     async def sendWorld(self, statements):
         if len(statements) == 0: return
-        await writePacket(self.websocket, "W", statements)
+        await self.sendPacket("W", statements)
 
     async def sendBlockTypes(self, types):
-        await writePacket(self.websocket, "B", types)
+        await self.sendPacket("B", types)
 
     async def sendToPlayers(self):
-        for p in getPlayers():
+        for p in world.getPlayers():
             if p != self:
                 await p.sendWorld([self.toStatement()])
 
@@ -203,11 +204,9 @@ class Player(Block):
         await self.collide()
 
     async def collide(self):
-        global WORLD
-
         self.on_ground = False
 
-        for block in WORLD:
+        for block in world.WORLD:
             if not block.collides: continue
             if block == self: continue
 
@@ -227,7 +226,8 @@ class Player(Block):
                 if self.x < block.x and self.x + self.vel_x > block.x - 1:
                     collide_x = -1
 
-            await block.onCollide(self, collide_x, collide_y)
+            if collide_x != 0 or collide_y != 0:
+                await block.onCollide(self, collide_x, collide_y)
 
     async def onCollide(self, player, x, y):
         await super().onCollide(player, x, y)
@@ -249,7 +249,7 @@ class Player(Block):
         return self.vel_x != 0 or self.vel_y != 0
 
     async def keepAlive(self):
-        await writePacket(self.websocket, "R", [str(self.x), str(self.y), str(self.vel_x), str(self.vel_y)])
+        await self.sendPacket("R", [str(self.x), str(self.y), str(self.vel_x), str(self.vel_y)])
 
     def toStatement(self, add=True):
         return f"P1{self.name},{self.x},{self.y},{self.vel_x},{self.vel_y},{self.color}" if add else f"P0{self.name}"

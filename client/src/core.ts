@@ -27,19 +27,26 @@ const allowed_key_to_send = [
     "F1", "F2", "KeyZ", "KeyX", "KeyC"
 ]
 
-function connectServer(address: string, name: string) {
+async function connectServer(address: string, name: string) {
     player.closeConnection()
     player.onConnect(name)
 
     try {
-        let conn = new Connection(address, player.onPacket, (e) => {
-            player.conn = null
-            setServerError(e == null ? "Connection closed due to error" : e)
-            resetWorld()
-        })
-        conn.send(new JoinPacket(name))
+        player.conn = new Connection(
+            await Connection.createSocket(
+                address, 
+                (p) => player.onPacket(p), 
+                (e) => {
+                    player.conn = null
+                    setServerError(e == null ? "Connection closed due to error" : e)
+                    resetWorld()
+                }
+            )
+        )
+        player.conn.send(new JoinPacket(name))
     } catch (exception) {
         setServerError(exception)
+        console.log(exception)
     }
 }
 

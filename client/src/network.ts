@@ -59,36 +59,27 @@ class VelocityPacket extends Packet {
 
 class Connection {
     private socket: WebSocket
-    private on_packet: (packet: Packet) => void
-    private on_close: (error: string | null) => void
 
-    constructor(
-        address: string, 
+    static createSocket(address: string, 
         on_packet: (packet: Packet) => void, 
         on_close: (error: string | null) => void
+    ): Promise<WebSocket> {
+        return new Promise((resolve, _) => {
+            let socket = new WebSocket(
+                "ws://"+address,
+                "cubic",
+            )
+            socket.onmessage = (e) => on_packet(Packet.fromString(e.data))
+            socket.onclose = (_) => on_close(null)
+            socket.onerror = (e) => on_close(e.toString())
+            socket.onopen = () => resolve(socket)
+        })
+    }
+
+    constructor(
+        socket: WebSocket
     ) {
-        this.socket = new WebSocket(
-            "ws://"+address,
-            "cubic",
-        )
-        this.on_packet = on_packet
-        this.on_close = on_close
-
-        this.socket.onmessage = this._on_message
-        this.socket.onclose = this._on_close
-        this.socket.onerror = this._on_error
-    }
-
-    private _on_message(event: MessageEvent) {
-        this.on_packet(Packet.fromString(event.data))
-    }
-
-    private _on_close(event: CloseEvent) {
-        this.on_close(null)
-    }
-
-    private _on_error(event: Event) {
-        this.on_close(event.toString())
+        this.socket = socket
     }
 
     close() {
@@ -96,6 +87,6 @@ class Connection {
     }
 
     send(packet: Packet) {
-        this.socket.send(packet.getId()+packet.getData())
+        this.socket.send(packet.getId()+packet.getData().join("\n"))
     }
 }

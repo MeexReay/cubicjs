@@ -5,6 +5,7 @@ from world import *
 from player import Player
 from packet import *
 import random
+import traceback
 
 async def startServer(host, port):
     async with serve(handler, host, port):
@@ -43,8 +44,10 @@ async def handler(websocket: ServerConnection):
 
         while True:
             packet_id, packet_data = await readPacket(websocket)
-            player.onPacket(packet_id, packet_data)
+            await player.onPacket(packet_id, packet_data)
     except Exception as exc:
+        traceback.print_exc()
+
         WORLD.remove(player)
 
         for p in getPlayers():

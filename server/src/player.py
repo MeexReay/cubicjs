@@ -28,7 +28,7 @@ class Player(Block):
         self.lsd_time = time.time()
 
     async def sendPacket(self, packet_id, packet_data):
-        await self.sendPacket(packet_id, packet_data)
+        await writePacket(self.websocket, packet_id, packet_data)
 
     async def onPacket(self, packet_id, packet_data):
         if packet_id == "V":

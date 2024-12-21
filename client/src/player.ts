@@ -1,3 +1,4 @@
+
 class MainPlayer extends Player {
     public conn: Connection | null
     public walk_speed: number

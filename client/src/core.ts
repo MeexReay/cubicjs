@@ -11,7 +11,7 @@ var camera = {
 }
 
 var chatOpened = false
-var chatMessages = []
+var chatMessages: string[] = []
 var chatTyping = ""
 
 var player = new MainPlayer()

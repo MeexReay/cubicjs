@@ -55,8 +55,6 @@ connect_server.onclick = () => {
     if (nick.length == 0) return setServerError("введите ник пж")
     if (!ip.includes(":")) ip += ":8000"
 
-    player.closeConnection()
-
     connectServer(ip, nick)
 }
 

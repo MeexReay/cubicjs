@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "target": "ES6",
+        "module": "amd",
+        "outDir": "./dest",
+        "rootDir": "./src",
+        "removeComments": true,
+        "strict": false,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "lib": ["DOM", "ES2016"],
+        "skipLibCheck": true
+    },
+    "include": ["src/**/*"],
+    "exclude": []
+  }
+  

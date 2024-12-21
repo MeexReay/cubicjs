@@ -1,7 +1,7 @@
 from block import Block
-from network import writePacket
+from packet import writePacket
 from config import SPAWN, REACH_DISTANCE, BLOCK_TYPES
-from main import getPlayers, WORLD
+from world import *
 import time
 
 class Player(Block):

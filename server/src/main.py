@@ -3,20 +3,9 @@ import asyncio, time
 from network import startServer
 from player import Player
 from block import Block
+from world import *
 from config import *
 
-def getPlayers():
-    global WORLD
-    for b in WORLD:
-        if type(b) == Player:
-            yield b
-
-def getPlayer(name):
-    global WORLD
-    for b in WORLD:
-        if type(b) == Player:
-            if b.name == name:
-                return b
 
 def current_milli_time():
     return round(time.time() * 1000)
@@ -44,12 +33,6 @@ async def main():
     asyncio.get_event_loop().create_task(keepAliveTimer())
     asyncio.get_event_loop().create_task(renderTimer())
     await startServer(HOST, PORT)
-
-WORLD = [
-    Block(-1, -1, "normal", "#555", True),
-    Block(0, -1, "spawn", "#2ad", True),
-    Block(1, -1, "normal", "#555", True)
-]
 
 if __name__ == "__main__":
     asyncio.run(main())

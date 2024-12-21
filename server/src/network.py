@@ -1,21 +1,15 @@
 from websockets.server import serve, ServerConnection
 import asyncio
 from config import BLOCK_TYPES, COLORS, SPAWN
-from main import WORLD, getPlayer, getPlayers
+from world import *
 from player import Player
+from packet import *
 import random
 
 async def startServer(host, port):
     async with serve(handler, host, port):
         print(f"started server on {host}:{port}")
         await asyncio.get_running_loop().create_future()
-
-async def readPacket(websocket: ServerConnection) -> tuple[str, list[str]]:
-    data = await websocket.recv()
-    return data[0], data[1:].splitlines()
-
-async def writePacket(websocket: ServerConnection, packet_id: str, packet_data: list[str]):
-    await websocket.send(packet_id + ("\n".join(packet_data)))
 
 async def handler(websocket: ServerConnection):
     packet_id, packet_data = await readPacket(websocket)

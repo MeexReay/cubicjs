@@ -231,25 +231,13 @@ class Player(Block):
 
     async def onCollide(self, player, x, y):
         await super().onCollide(player, x, y)
-        # if x != 0:
-        #     player.vel_x *= 0.5
-        #     self.vel_x = player.vel_x
-        # if y != 0:
-        #     player.vel_y *= 0.5
-        #     self.vel_y = player.vel_y
-        # pass
 
     async def render(self):
         self.vel_x *= 0.5
         self.vel_y *= 0.5
         self.x += self.vel_x
         self.y += self.vel_y
-        # await self.setVel(self.vel_x * 0.5, self.vel_y * 0.5)
-        # await self.setPos(self.x + self.vel_x, self.y + self.vel_y)
         return self.vel_x != 0 or self.vel_y != 0
-
-    async def keepAlive(self):
-        await self.sendPacket("R", [str(self.x), str(self.y), str(self.vel_x), str(self.vel_y)])
 
     def toStatement(self, add=True):
         return f"P1{self.name},{self.x},{self.y},{self.vel_x},{self.vel_y},{self.color}" if add else f"P0{self.name}"

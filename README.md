@@ -1,6 +1,6 @@
 # cubicjs
 
-сайт: https://meex.lol/cubic/
+сайт: https://meex.lol/cubic/client/index.html
 
 ## роадмап
 

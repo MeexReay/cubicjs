@@ -1,3 +1,4 @@
 server/__pycache__/
 server/src/__pycache__/
-client/dest
+server/dest/
+client/dest/
